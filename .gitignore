@@ -12,3 +12,5 @@ test_fonts.pdf
 generated_plots/
 venv311
 .vscode/
+docker-compose.yml
+Dockerfile

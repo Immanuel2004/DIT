@@ -12,7 +12,7 @@ from utils.chat_handler import handle_user_query_dynamic
 from utils.error_handler import safe_llm_call
 from utils.pdf_exporter import generate_pdf_report, export_to_pptx
 import plotly.express as px
-from mongo_db.mongo_handler import save_chat,load_user_chats 
+# from mongo_db.mongo_handler import save_chat,load_user_chats 
 def inject_auth_css():
     st.markdown("""
         <style>
@@ -281,7 +281,7 @@ def render_single_tabs():
         )
 
         if "chat_history" not in st.session_state:
-            st.session_state.chat_history = load_user_chats(st.session_state.username) or []
+            st.session_state.chat_history =  []
 
         with st.container():
             for msg in st.session_state.chat_history:
@@ -326,13 +326,13 @@ def render_single_tabs():
         user_prompt = st.chat_input("Ask a question about your dataset...")
         if user_prompt:
             st.session_state.chat_history.append({"user": user_prompt})
-            save_chat(st.session_state.username, "user", user_prompt)
+            # save_chat(st.session_state.username, "user", user_prompt)
 
             with st.spinner("Thinking..."):
                 result = safe_llm_call(handle_user_query_dynamic, user_prompt, df, "groq", default={"response": "No response."})
 
             st.session_state.chat_history.append({"assistant": result})
-            save_chat(st.session_state.username, "ai", result["response"])
+            # save_chat(st.session_state.username, "ai", result["response"])
 
             st.rerun()
 

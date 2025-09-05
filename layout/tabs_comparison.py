@@ -8,7 +8,7 @@ from utils.column_selector import get_important_columns
 from utils.llm_selector import get_llm
 import re
 import json
-from mongo_db.mongo_handler import save_chat, load_user_chats
+# from mongo_db.mongo_handler import save_chat, load_user_chats
 import plotly.express as px
 import os
 from utils.visualizer import visualize_comparison_overlay, visualize_comparison_side_by_side
@@ -434,7 +434,7 @@ def render_comparison_tabs():
         )
 
         if "compare_chat_history" not in st.session_state:
-            st.session_state.compare_chat_history = load_user_chats(st.session_state.username + "_comparison") or []
+            st.session_state.compare_chat_history =  []
 
 
         with st.container():
@@ -484,7 +484,7 @@ def render_comparison_tabs():
                 result = safe_llm_call(handle_user_query_dynamic, compare_prompt, merged_df, "groq", default={"response": "No response."})
             st.session_state.compare_chat_history[-1]["assistant"] = result
 
-            save_chat(st.session_state.username + "_comparison", compare_prompt, result)
+            # save_chat(st.session_state.username + "_comparison", compare_prompt, result)
             st.rerun()
 
     col1, col2 = st.columns(2)

@@ -105,7 +105,7 @@ if not st.session_state.logged_in:
     st.stop()
 
 
-st.set_page_config(page_title="Dynamic Impact Tool", layout="wide")
+st.set_page_config(page_title="data-2-Decision", layout="wide")
 
 if "has_seen_tour" not in st.session_state:
     st.session_state.has_seen_tour = False
@@ -164,7 +164,7 @@ elif navigation == "Audit Logs" and st.session_state.role == "admin":
     view_logs()
 
 elif navigation == "Dashboard":
-    st.title("Dynamic Impact Tool")
+    st.title("data-2-Decision")
     render_sidebar()
     render_upload_area()
 

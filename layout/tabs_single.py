@@ -11,7 +11,13 @@ from utils.llm_selector import get_llm
 from utils.chat_handler import handle_user_query_dynamic
 from utils.error_handler import safe_llm_call
 from utils.pdf_exporter import generate_pdf_report, export_to_pptx
+from utils.ml_engine import save_trained_model,run_ml,explain_model
 import plotly.express as px
+from sklearn.impute import SimpleImputer
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+
+
 # from mongo_db.mongo_handler import save_chat,load_user_chats 
 def inject_auth_css():
     st.markdown("""
@@ -110,29 +116,23 @@ def render_single_tabs():
 
     session = st.session_state["dataset_sessions"][st.session_state["current_session"]]
     df = session["df"]
-    tab1, tab2, tab3  = st.tabs(["Data Preview", "Insights", "Visualizations"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "Data Information & EDA",         
+    "ML Model Training & Evaluation", 
+    "Insights",              
+    "Model Visualizations",          
+    "Business Dashboard & Export"    
+])
+
 
     with tab1:
-        st.header("Dataset Summary & Column Selection")
+        st.header("📊 Dataset Summary & Column Selection")
 
-        st.write(f"Total Rows: {df.shape[0]}")
-        st.write(f"Total Columns: {df.shape[1]}")
 
-        st.subheader("Dataset Preview")
-        sample_rows = st.slider("Preview Rows Limit", 0, 100, 10, key="sample_rows_single")
-        st.dataframe(df.head(sample_rows), use_container_width=True)
-
-        st.subheader("Column Selection")
-        important_cols = get_important_columns(df.to_csv(index=False))
-        user_selected_cols = st.multiselect("Select Additional Columns", df.columns.tolist(), default=important_cols)
-
-        final_cols = list(set(important_cols + user_selected_cols))
-        session["column_selection"] = final_cols
-
-        st.write(f"Selected Columns: {final_cols}")
-        st.dataframe(df[final_cols].head(), use_container_width=True)
-    
     with tab2:
+        st.header("ML Model Training & Evaluation")
+
+    with tab3:
         st.header("Insights")
 
         col_left, col_right = st.columns([7, 3], gap="large")
@@ -203,7 +203,7 @@ def render_single_tabs():
                             except Exception as e:
                                  st.error(f"Insight generation failed: {e}")
              st.markdown("</div>", unsafe_allow_html=True)
-    with tab3:
+    with tab4:
         st.header("Visualizations")
 
         if not session.get("column_selection"):
@@ -352,7 +352,6 @@ def render_single_tabs():
         if st.button("Export PDF Report"):
             formatted_chat = format_chat_for_pdf(st.session_state.get("chat_history", []))
             
-            # ✅ Ensure insights is always a list
             insights_dict = st.session_state.get("insights", {})
             insights = list(insights_dict.values()) if isinstance(insights_dict, dict) else insights_dict
 
@@ -368,7 +367,7 @@ def render_single_tabs():
             output_path = generate_pdf_report(
                 session=session,
                 filename="final_analysis_report.pdf",
-                model_source="groq"  # ✅ pass the model source explicitly
+                model_source="groq"  
             )
 
             with open(output_path, "rb") as f:
@@ -380,58 +379,9 @@ def render_single_tabs():
                 file_name="final_analysis_report.pdf",
                 mime="application/pdf"
             )
-            st.success("✅ PDF exported successfully!")
+            st.success("PDF exported successfully!")
             st.session_state["report_counter"] += 1
             st.balloons()
 
-
-
-                        
-    # with col2:
-    #  if st.button("Export PPTX (Single Dataset)", key="export_single_pptx"):
-    #     try:
-    #         pptx_path = export_to_pptx(session)
-    #         with open(pptx_path, "rb") as f:
-    #             st.download_button("Download PPTX", f, file_name="single_dataset_report.pptx")
-    #     except Exception as e:
-    #         st.error(f"Failed to export PPTX: {e}")
-
-    # if "email" in st.session_state:
-    #     user_email = st.session_state["email"]
-    #     upload_history = get_user_uploads(user_email)
-    #     chat_history = get_user_chats(user_email)
-    # else:
-    #     upload_history = []
-    #     chat_history = []
-
-    # with tab4:
-    #     st.markdown("### 📁 Upload History")
-    #     if upload_history:
-    #         for item in upload_history:
-    #             with st.container():
-    #                 col1, col2 = st.columns([1, 3])
-    #                 with col1:
-    #                     st.markdown("📄")
-    #                 with col2:
-    #                     st.markdown(f"**Filename:** `{item.get('filename', 'N/A')}`")
-    #                     st.markdown(f"**Uploaded on:** `{item.get('timestamp', 'N/A')}`")
-    #                 st.markdown("---")
-    #     else:
-    #         st.info("No uploads found.")
-
-    #     st.markdown("### 💬 Chat History")
-    #     if chat_history:
-    #         for chat in chat_history:
-    #             with st.container():
-    #                 st.markdown(
-    #                     f"""
-    #                     <div style="background-color:#f0f2f6; padding:10px; border-radius:10px; margin-bottom:10px;">
-    #                         <strong>🕒 {chat.get("timestamp", "N/A")}</strong><br>
-    #                         <span style="color:#444;">💬 <b>User:</b> {chat.get("prompt", "")}</span><br>
-    #                         <span style="color:#777;">🤖 <b>Assistant:</b> {chat.get("response", "")}</span>
-    #                     </div>
-    #                     """,
-    #                     unsafe_allow_html=True,
-    #                 )
-    #     else:
-    #         st.info("No chat history found.")
+    with tab5:
+        st.subheader('Business Dashboard')

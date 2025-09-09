@@ -19,7 +19,7 @@ import pandas as pd
 from utils.column_selector import get_important_columns
 from utils.llm_selector import get_llm
 from utils.pdf_exporter_comparision import generate_pdf_report_comparison
-import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
 import hashlib
 from utils.visualizer import visualize_comparison_overlay  
 
@@ -160,8 +160,15 @@ def render_comparison_tabs():
     df2 = compare_session["df2"]
 
     st.success(f"Currently Comparing: {compare_key}")
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            "Dataset Previews",
+            "ML Model Training & Evaluation",
+            "Comparison Insights",
+            "Visualizations",
+            "Business Dashboard & Export"
+        ])
 
-    tab1, tab2, tab3 = st.tabs(["Dataset Previews", "Comparison Insights", "Visualizations"])
+
 
     with tab1:
         st.header("Dataset Previews")
@@ -206,32 +213,12 @@ def render_comparison_tabs():
         if not common_cols:
             st.warning("No common columns found between both datasets.")
             st.stop()
-      
-
-    with tab3:
-        st.header("Comparison Visualizations")
-        x_axis = st.selectbox("Select X-Axis for Comparison", common_cols, key="compare_x_axis")
-        y_axis = st.selectbox("Select Y-Axis for Comparison", common_cols, key="compare_y_axis")
-        chart_type = st.selectbox("Chart Type", ["bar", "line", "scatter"], key="compare_chart")
-        layout = st.radio("Layout", ["Overlay", "Side-by-Side"], horizontal=True, key="compare_layout")
-
-        if x_axis and y_axis:
-            try:
-                if layout == "Overlay":
-                    fig, explanation = visualize_comparison_overlay(df1, df2, x_axis, y_axis, "Dataset 1", "Dataset 2", chart_type)
-                    st.plotly_chart(fig, use_container_width=True)
-                    compare_session["visualization_history"].append(f"{chart_type} chart: {x_axis} vs {y_axis} (Overlay)")
-                    st.caption(explanation)
-                else:
-                    fig1, fig2 = visualize_comparison_side_by_side(df1, df2, x_axis, y_axis, chart_type)
-                    col1, col2 = st.columns(2)
-                    col1.plotly_chart(fig1, use_container_width=True)
-                    col2.plotly_chart(fig2, use_container_width=True)
-                    compare_session["visualization_history"].append(f"{chart_type} chart: {x_axis} vs {y_axis} (Side-by-Side)")
-            except Exception as e:
-                st.error(f"Comparison visualization failed: {e}")
 
     with tab2:
+        st.header('ML Model Training & Evaluation')
+    
+
+    with tab3:
      st.header("Comparison Insights")
 
      merged_df = pd.concat([df1.assign(dataset="Dataset 1"), df2.assign(dataset="Dataset 2")])
@@ -246,9 +233,7 @@ def render_comparison_tabs():
                     st.markdown(f"**{insight['question']}**")
                     st.markdown(insight["result"])
                     if any(term in insight["result"].lower() for term in ["graph", "visual", "chart", "plot"]):
-                    # if "graph" in insight["result"].lower() or "visual" in insight["result"].lower() or "chart" in insight["result"].lower() or "plot" in insight["result"].lower():
                             try:
-                                # Very basic detection of x/y axis from the answer text
                                 x_axis, y_axis = None, None
                                 for col in compare_session["final_cols1"]:
                                     if col.lower() in insight["result"].lower():
@@ -279,10 +264,6 @@ def render_comparison_tabs():
                                     image_path_2 = f"generated_plots/{hash_name}_2.png"
                                     pio.write_image(fig2, image_path_2)
 
-                                    # image_path_1 = f"generated_plots/{hashlib.md5(insight['question'].encode()).hexdigest()}.png"
-                                    # image_path_2 = f"generated_plots/{hashlib.md5((insight['question'] + '_2').encode()).hexdigest()}.png"
-                                    # pio.write_image(fig1, image_path_1)  # save first plot as representation\
-                                    # pio.write_image(fig2, image_path_2.replace(".png", "_2.png"))  # save second plot as representation
 
                                     insight["image_path_1"] = image_path_1
                                     insight["image_path_2"] = image_path_2
@@ -516,3 +497,29 @@ def render_comparison_tabs():
                     st.error("PDF generation failed. Please ensure datasets and insights are available.")
             except Exception as e:
                 st.error(f"Failed to export PDF: {e}")
+
+    with tab4:
+        st.header("Comparison Visualizations")
+        x_axis = st.selectbox("Select X-Axis for Comparison", common_cols, key="compare_x_axis")
+        y_axis = st.selectbox("Select Y-Axis for Comparison", common_cols, key="compare_y_axis")
+        chart_type = st.selectbox("Chart Type", ["bar", "line", "scatter"], key="compare_chart")
+        layout = st.radio("Layout", ["Overlay", "Side-by-Side"], horizontal=True, key="compare_layout")
+
+        if x_axis and y_axis:
+            try:
+                if layout == "Overlay":
+                    fig, explanation = visualize_comparison_overlay(df1, df2, x_axis, y_axis, "Dataset 1", "Dataset 2", chart_type)
+                    st.plotly_chart(fig, use_container_width=True)
+                    compare_session["visualization_history"].append(f"{chart_type} chart: {x_axis} vs {y_axis} (Overlay)")
+                    st.caption(explanation)
+                else:
+                    fig1, fig2 = visualize_comparison_side_by_side(df1, df2, x_axis, y_axis, chart_type)
+                    col1, col2 = st.columns(2)
+                    col1.plotly_chart(fig1, use_container_width=True)
+                    col2.plotly_chart(fig2, use_container_width=True)
+                    compare_session["visualization_history"].append(f"{chart_type} chart: {x_axis} vs {y_axis} (Side-by-Side)")
+            except Exception as e:
+                st.error(f"Comparison visualization failed: {e}")
+
+    with tab5:
+        st.header('Business Dashboard & Export')

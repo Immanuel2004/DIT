@@ -3,6 +3,8 @@ import json
 from utils.llm_selector import get_llm
 from utils.json_utils import extract_json_list
 from utils.logger import logger
+import streamlit as st
+import  re
 
 def generate_insight_suggestions(preview_data, model_source="groq"):
     """
@@ -105,7 +107,7 @@ def generate_insights(df, title, model_source="groq"):
         return response if isinstance(response, str) else getattr(response, "content", str(response))
     except Exception as e:
         logger.error(f"Insight generation failed: {e}")
-        return "⚠️ Insight generation failed. Please try again."
+        return "Insight generation failed. Please try again."
 
 
 def generate_comparison_analysis(df1, df2, title, model_source="groq"):
@@ -139,3 +141,61 @@ def generate_comparison_analysis(df1, df2, title, model_source="groq"):
         return json.loads(response)
     except Exception:
         return extract_json_list(response)
+
+import re
+import json
+import re
+import json
+
+def extract_json(text: str):
+    """Extract the first {...} block from a string."""
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if match:
+        return json.loads(match.group())
+    else:
+        return {}
+
+
+def data_information(df, model_source="groq"):
+    llm = get_llm(model_source)
+    preview = df.to_csv(index=False)
+
+    column_selection = st.session_state.get("column_selection", [])
+    eda_info = st.session_state.get("eda_info", {})
+    ml_info = st.session_state.get("ml_ready_features", [])
+
+    prompt = f"""
+    You are a helpful Data Analyst.
+
+    Dataset Preview:
+    {preview}
+
+    Columns: {column_selection}
+    EDA Info: {eda_info}
+    ML Info: {ml_info}
+
+    Return ONLY a JSON object with:
+    - summary
+    - insights
+    - visualizations
+    - business_value
+    """
+
+    response = llm(prompt)
+    if hasattr(response, "content"):
+        response = response.content
+
+    clean_response = re.sub(r"^```(?:json)?", "", response.strip(), flags=re.IGNORECASE)
+    clean_response = re.sub(r"```$", "", clean_response.strip())
+
+    try:
+        return extract_json(clean_response)
+    except Exception as e:
+        st.error(f"JSON parsing failed: {e}")
+        st.text_area("Raw LLM response", response, height=300)
+        return {
+            "summary": {"dataset_size": "N/A", "feature_columns": "N/A", "target_class": "N/A"},
+            "insights": [],
+            "visualizations": [],
+            "business_value": []
+        }

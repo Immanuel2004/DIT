@@ -37,6 +37,8 @@ def generate_comparison_insight_suggestions(df1, df2, model_source="groq"):
     ]
 
      Do not include any introduction, explanation, or extra text. Only return the JSON array.
+      Don't generate the code 
+    Generate Data Visualization based on the users data if needed
     """
 
     try:
@@ -62,6 +64,8 @@ Based on the data preview below, provide a concise but deep insight (4-6 lines).
 
 Data Preview (first 100 rows):
 {preview[:1500]}
+ Don't generate the code 
+    Generate Data Visualization based on the users data if needed
 """
 
     try:
@@ -86,6 +90,8 @@ Return them in JSON list of dicts with 'title' and 'description'.
 
 Data Preview:
 {merged_preview.to_csv(index=False)[:3000]}
+ Don't generate the code 
+    Generate Data Visualization based on the users data if needed
 """
 
         if model_source == "groq":

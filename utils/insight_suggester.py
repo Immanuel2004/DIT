@@ -21,6 +21,8 @@ def generate_insight_suggestions(preview_data, model_source="groq"):
         {{"title": "Category Name", "questions": ["Question 1", "Question 2", "Question 3"]}},
         ...
     ]
+    Don't generate the code 
+    Generate Data Visualization based on the users data if needed
     """
 
     try:
@@ -72,6 +74,8 @@ Based on the provided Dataset:
 Respond in markdown format with your full analysis.
 
 -Do Not Create your own column names, use the ones provided in the CSV.
+ Don't generate the code 
+    Generate Data Visualization based on the users data if needed 
 """
 
     return llm(prompt)
@@ -95,6 +99,8 @@ def generate_comparison_analysis(df1, df2, title, model_source="groq"):
                 {{ "{title}": "...", "description": "..." }},
                 ...
                 ]
+                 Don't generate the code 
+    Generate Data Visualization based on the users data if needed
             """
     response = llm(prompt).strip()
 
